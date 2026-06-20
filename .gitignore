@@ -27,3 +27,12 @@ dist-ssr
 .amplify
 amplify_outputs*
 amplifyconfiguration*
+
+# env / secrets (never commit; use AWS Secrets Manager in deployed envs)
+.env
+.env.*
+!.env.example
+
+# CDK
+cdk.out
+*.tsbuildinfo

@@ -1,0 +1,15 @@
+{
+  "name": "@forge/research",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Per-parcel research engine: deterministic GIS kinds + Claude-API zoning/CMA, cached with TTLs.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "test": "vitest run", "typecheck": "tsc --noEmit" },
+  "dependencies": {
+    "@forge/shared": "*",
+    "@forge/gis": "*",
+    "@forge/db": "*",
+    "@anthropic-ai/sdk": "^0.40.1"
+  }
+}

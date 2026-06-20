@@ -1,0 +1,62 @@
+{
+  "page": 1,
+  "numPages": 2,
+  "count": 3,
+  "listings": [
+    {
+      "mlsNumber": "73000001",
+      "status": "U",
+      "lastStatus": "Sld",
+      "listPrice": 250000,
+      "originalPrice": 279000,
+      "soldPrice": 200000,
+      "listDate": "2024-02-01",
+      "soldDate": "2025-04-15",
+      "updatedOn": "2025-04-16T10:00:00Z",
+      "daysOnMarket": 439,
+      "type": "Sale",
+      "class": "residential",
+      "address": {
+        "streetNumber": "33",
+        "streetName": "Russo",
+        "streetSuffix": "Dr",
+        "city": "Hopkinton",
+        "state": "MA",
+        "zip": "01748"
+      },
+      "map": { "latitude": 42.2287, "longitude": -71.5226 },
+      "lot": { "acres": 1.5, "squareFeet": 65340 },
+      "details": {
+        "propertyType": "Vacant Land",
+        "style": "Land",
+        "zoning": "RA",
+        "description": "Approved build lot, two prior price cuts."
+      }
+    },
+    {
+      "mlsNumber": "73000002",
+      "status": "A",
+      "lastStatus": "New",
+      "listPrice": 614900,
+      "listDate": "2025-06-01",
+      "updatedOn": "2025-06-02T08:30:00Z",
+      "type": "Sale",
+      "class": "residential",
+      "address": {
+        "streetNumber": "12",
+        "streetName": "Elm",
+        "streetSuffix": "St",
+        "city": "Framingham",
+        "state": "MA",
+        "zip": "01701"
+      },
+      "map": { "latitude": 42.2793, "longitude": -71.4162 },
+      "details": {
+        "propertyType": "Single Family",
+        "style": "Colonial",
+        "sqft": 2200,
+        "yearBuilt": 1992
+      }
+    }
+  ]
+}

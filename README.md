@@ -1,25 +1,72 @@
-## AWS Amplify React+Vite Starter Template
+# Forge Hill Land Analyzer
 
-This repository provides a starter template for creating applications using React+Vite and AWS Amplify, emphasizing easy setup for authentication, API, and database capabilities.
+Internal-only web app that ingests every Massachusetts MLS PIN listing daily,
+runs an automated research + pro forma pipeline per parcel (zoning, frontage,
+topo/elevation, FEMA flood, wetlands, assessor/ownership, new-construction CMA),
+caches the research per parcel so it never re-runs the same work, and ranks the
+best build-and-sell opportunities. Automates the manual workflow behind 33 Russo
+Drive.
 
-## Overview
+**Internal back-office use only.** No public site, no IDX, no consumer access.
 
-This template equips you with a foundational React application integrated with AWS Amplify, streamlined for scalability and performance. It is ideal for developers looking to jumpstart their project with pre-configured AWS services like Cognito, AppSync, and DynamoDB.
+See **[ARCHITECTURE.md](ARCHITECTURE.md)** for decisions, the verified-fact
+corrections to the original PRD, and the build plan.
 
-## Features
+## Layout (npm workspaces)
 
-- **Authentication**: Setup with Amazon Cognito for secure user authentication.
-- **API**: Ready-to-use GraphQL endpoint with AWS AppSync.
-- **Database**: Real-time database powered by Amazon DynamoDB.
+```
+/src           React (Vite) dashboard — Amplify-hosted
+/amplify       Amplify Gen 2 — Cognito auth ONLY
+/packages
+  shared       RESO-normalized types + MlsProvider interface
+  providers    RepliersProvider (Phase-1 MLS feed) + tests
+  gis          MassGIS L3 parcel resolution + FEMA/wetlands/elevation clients
+  db           PostGIS schema/migrations + RDS Data API access layer
+  pipeline     daily incremental ingest Lambda
+  api          Cognito-authed app API Lambda
+  research     per-parcel research engine (GIS kinds + zoning LLM) with TTL caching
+  scoring      pro forma + 0-100 score + risk flags + recommended offer
+  infra        CDK app (Aurora Serverless v2, Lambdas, EventBridge, S3, secrets)
+```
 
-## Deploying to AWS
+## Getting started
 
-For detailed instructions on deploying your application, refer to the [deployment section](https://docs.amplify.aws/react/start/quickstart/#deploy-a-fullstack-app-to-aws) of our documentation.
+```bash
+npm install
 
-## Security
+# Run the dashboard in PREVIEW mode (sample data, no backend, no auth wall):
+npm run dev            # http://localhost:5173
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+npm test               # provider normalization + incremental-sync tests
+npm run typecheck      # all packages
+npm run build          # web app production build
+```
+
+The dashboard runs immediately in **preview mode** because there's no
+`amplify_outputs.json` yet. Once a backend is provisioned it switches to real
+Cognito auth + the live API automatically. Point the web app at the deployed API
+with `VITE_API_URL` (see `.env.example`).
+
+## Current status
+
+**Phases 1–3 built** (34 tests green), building against Repliers **sandbox**
+data. Phase 1 = ingest + store + dashboard; Phase 2 = the per-parcel research
+engine (flood/wetlands/topo/ownership/CMA deterministic from government GIS +
+our own comps; zoning via Claude with web tools + source validation; TTL
+caching); Phase 3 = pro forma + 0–100 score + risk flags + recommended offer,
+the enrich step wired into the daily pipeline (research → feasibility → rank),
+and the watch/proforma/runs/digest API endpoints. Live MLS data is gated on the
+MLS PIN broker agreement — see Phase 0 in [ARCHITECTURE.md](ARCHITECTURE.md).
+Phases 4–5 (detail page + PDF memo export, polish) remain.
+
+## Provisioning (later)
+
+1. `npx ampx sandbox` (or deploy) — creates the Cognito pool + `amplify_outputs.json`.
+2. `cd packages/infra && npm run deploy` — Aurora + Lambdas + API (pass the
+   Cognito ids via `USER_POOL_ID` / `USER_POOL_CLIENT_ID`).
+3. Apply `packages/db/migrations/*.sql` (PostGIS first).
+4. Put the Repliers key in the `RepliersApiKey` secret.
 
 ## License
 
-This library is licensed under the MIT-0 License. See the LICENSE file.
+Private / internal.

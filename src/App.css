@@ -1,42 +1,213 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+.app {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top bar */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--header);
+  color: #fff;
+  padding: 10px 18px;
+}
+.brand {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+.brand-sub {
+  font-weight: 400;
+  color: #9aa4b0;
+  margin-left: 6px;
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.user {
+  color: #c6ccd4;
+  font-size: 13px;
+}
+.pill {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.pill-warn {
+  background: #3a2d00;
+  color: #f5c518;
+  border: 1px solid #5c4900;
+}
+
+/* Filter bar */
+.filterbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+.filterbar input,
+.filterbar select {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+}
+.filterbar input[type='number'] {
+  width: 110px;
+}
+.count {
+  margin-left: auto;
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.btn,
+.btn-ghost {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 6px;
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.btn {
+  background: var(--accent);
+  color: #fff;
+}
+.btn:hover {
+  background: #1a5fd0;
+}
+.btn-ghost {
+  background: transparent;
+  border-color: var(--line);
+  color: inherit;
+}
+.topbar .btn-ghost {
+  color: #fff;
+  border-color: #33404d;
+}
+
+/* Banner */
+.banner {
+  padding: 10px 18px;
+  font-size: 13px;
+}
+.banner-error {
+  background: #fff0ee;
+  color: var(--bad);
+  border-bottom: 1px solid #f3c0ba;
+}
+
+/* Table */
+.tablewrap {
+  flex: 1;
+  overflow: auto;
+}
+.grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.grid th,
+.grid td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.grid thead th {
+  position: sticky;
+  top: 0;
+  background: #eef1f5;
+  color: var(--ink-dim);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  z-index: 1;
+}
+.grid tbody tr:hover {
+  background: #f0f5ff;
+}
+.grid td.num,
+.grid th.num {
+  text-align: right;
+}
+.grid td.dim {
+  color: var(--ink-dim);
+}
+.grid td.addr {
+  font-weight: 600;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.grid td.profit {
+  color: var(--ok);
+  font-weight: 600;
+}
+.grid tr.unresolved {
+  background: #fffbf0;
+}
+.grid tr.unresolved:hover {
+  background: #fff6e0;
+}
+.empty {
   text-align: center;
+  color: var(--ink-dim);
+  padding: 40px 0;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+/* Score badge */
+.score {
+  display: inline-block;
+  min-width: 30px;
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: 700;
+  color: #fff;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+.score-hi {
+  background: var(--ok);
 }
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.score-mid {
+  background: var(--warn);
 }
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.score-lo {
+  background: var(--bad);
 }
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.score-none {
+  background: #aab2bd;
 }
 
-.card {
-  padding: 2em;
+.status {
+  font-size: 12px;
+  color: var(--ink-dim);
 }
 
-.read-the-docs {
-  color: #888;
+/* Flag chips */
+.flags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  max-width: 260px;
+}
+.chip {
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #fdecea;
+  color: #9a3a30;
+  border: 1px solid #f3c0ba;
 }

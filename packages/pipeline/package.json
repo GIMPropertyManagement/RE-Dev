@@ -1,0 +1,21 @@
+{
+  "name": "@forge/pipeline",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Daily pipeline: incremental ingest + research/feasibility enrichment + ranking.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc --noEmit" },
+  "dependencies": {
+    "@forge/shared": "*",
+    "@forge/providers": "*",
+    "@forge/gis": "*",
+    "@forge/db": "*",
+    "@forge/research": "*",
+    "@forge/scoring": "*",
+    "@aws-sdk/client-secrets-manager": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145"
+  }
+}

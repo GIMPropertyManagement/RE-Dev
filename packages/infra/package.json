@@ -1,0 +1,23 @@
+{
+  "name": "@forge/infra",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CDK app: Aurora Serverless v2 (PostGIS), ingest + API Lambdas, EventBridge schedule, S3, secrets.",
+  "bin": { "forge-infra": "bin/app.ts" },
+  "scripts": {
+    "synth": "cdk synth",
+    "deploy": "cdk deploy",
+    "diff": "cdk diff",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@forge/pipeline": "*",
+    "@forge/api": "*",
+    "aws-cdk-lib": "^2.170.0",
+    "constructs": "^10.4.2"
+  },
+  "devDependencies": {
+    "aws-cdk": "^2.170.0"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@forge/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Cognito-authed app API (HTTP API + Lambda) reading Aurora via the RDS Data API.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc --noEmit" },
+  "dependencies": {
+    "@forge/shared": "*",
+    "@forge/db": "*",
+    "@forge/scoring": "*"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145"
+  }
+}

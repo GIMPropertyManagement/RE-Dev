@@ -1,0 +1,13 @@
+{
+  "name": "@forge/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared domain types, RESO-normalized listing model, and the MlsProvider interface.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}
