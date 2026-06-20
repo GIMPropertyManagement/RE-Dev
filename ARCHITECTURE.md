@@ -8,16 +8,20 @@ corrected positions are below).
 
 ## Status
 
-**Phases 1–3 built, against Repliers sandbox data.** Phase 1: provider seam,
+**Phases 1–4 built, against Repliers sandbox data.** Phase 1: provider seam,
 parcel resolution, DB schema, ingest pipeline, app API, CDK infra, authed
 dashboard. Phase 2: the research engine (`@forge/research`) — six per-parcel
 kinds with TTL caching and the never-invent contract. Phase 3: pro forma + 0–100
 score + risk flags + recommended offer (`@forge/scoring`), the enrich step wired
 into the daily pipeline (research → feasibility → persist → rank), and the
-watch/proforma/runs/digest API endpoints. All typecheck/build/test green (34
-tests). Nothing is deployed and no live MLS data flows yet — gated on the MLS PIN
-broker agreement (Phase 0, below). Phases 4–5 (detail page + PDF memo, polish)
-remain.
+watch/proforma/runs/digest API endpoints. Phase 4: the property detail page
+(map, research findings, CMA table, live pro forma editor, sources, watch/
+re-research) and the 2-page PDF investment memo (`@forge/pdf`) — generated
+server-side to S3 (presigned download) and client-side in preview. All
+typecheck/build/test green (36 tests). Nothing is deployed and no live MLS data
+flows yet — gated on the MLS PIN broker agreement (Phase 0, below). Phase 5
+(polish: budget alarms, MFA, provider-swap test, dedupe hardening, notifications)
+remains.
 
 ## Component map
 
@@ -46,6 +50,7 @@ Code lives in npm workspaces:
 | `@forge/api` | Cognito-authed app API Lambda |
 | `@forge/research` | per-parcel research engine (4 deterministic GIS kinds + deterministic CMA + zoning LLM) with TTL caching |
 | `@forge/scoring` | pro forma (Russo defaults), 0–100 score, risk flags, recommended offer, feasibility synthesis |
+| `@forge/pdf` | 2-page PDF investment memo builder (pdf-lib; browser + Lambda) |
 | `@forge/infra` | CDK app (Aurora, Lambdas, EventBridge, S3, secrets) |
 | `/src` (root) | React (Vite) dashboard, Amplify-hosted |
 | `/amplify` | Amplify Gen 2 — **Cognito auth only** (no data layer) |
@@ -155,6 +160,21 @@ matters most (the source IS the government endpoint).
   not yet scored today → research → `synthesizeFeasibility` → persist the `auto`
   pro forma + the day's `scores` row → `rankRun`. A second EventBridge Lambda
   (`EnrichFn`, 07:30 UTC) runs it after ingest.
+
+### 7b. Detail UI + PDF memo (Phase 4 — BUILT)
+- **Frontend** moved to `react-router` (`/` dashboard → `/parcels/:id` detail).
+  The detail page renders a Leaflet map (OSM tiles; parcel pin + lot polygon from
+  `ST_AsGeoJSON(lot_geom)`), the research findings (zoning/flood/wetlands/topo/
+  ownership), the CMA comp table, a **live pro forma editor** (recomputes via
+  `@forge/scoring/proforma` client-side, saves named scenarios via `POST
+  /proforma`), the score + flags, a sources list, and watch / re-research / export
+  buttons.
+- **PDF memo** (`@forge/pdf`, pdf-lib) builds the 2-page Russo-style memo (exec
+  summary + offer, snapshot, zoning/frontage, site/environmental, ownership, CMA,
+  pro forma, diligence checklist, sources). One builder, two call sites: the API
+  generates it server-side → uploads to S3 → returns a **presigned** URL
+  (`GET /parcels/:id/report.pdf`); the web builds it **client-side** in preview
+  mode (no backend needed). `detailToMemoData` maps the API detail JSON for both.
 
 ### 8. Step Functions deferred
 For 3 users and a once-daily bounded batch, a single scheduled ingest Lambda

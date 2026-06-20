@@ -4,7 +4,11 @@
   "private": true,
   "type": "module",
   "description": "Pro forma cost model, 0-100 profitability score, risk flags, and feasibility synthesis (Russo-derived defaults, all overridable).",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts",
+    "./proforma": "./src/proforma.ts",
+    "./config": "./src/config.ts"
+  },
   "scripts": { "test": "vitest run", "typecheck": "tsc --noEmit" },
   "dependencies": {
     "@forge/shared": "*",

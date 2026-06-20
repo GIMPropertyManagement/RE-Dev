@@ -1,0 +1,12 @@
+{
+  "name": "@forge/pdf",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "2-page investment memo PDF builder (pdf-lib). Browser- and Lambda-safe; no AWS deps.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "test": "vitest run", "typecheck": "tsc --noEmit" },
+  "dependencies": {
+    "pdf-lib": "^1.17.1"
+  }
+}

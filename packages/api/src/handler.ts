@@ -14,6 +14,9 @@ import {
   type ParcelFilters,
 } from '@forge/db';
 import { computeProForma, DEFAULT_PRO_FORMA_INPUTS, type ProFormaInputs } from '@forge/scoring';
+import { buildMemoPdf, detailToMemoData, type ParcelDetail } from '@forge/pdf';
+import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 /**
  * App API Lambda behind an API Gateway HTTP API with a Cognito JWT authorizer.
@@ -79,6 +82,11 @@ export async function handler(
       return json(202, { busted: true, note: 'Re-research scheduled on the next enrich run.' });
     }
 
+    const report = path.match(/^\/parcels\/([^/]+)\/report\.pdf$/);
+    if (method === 'GET' && report) {
+      return json(200, await buildReport(db, decodeURIComponent(report[1])));
+    }
+
     const detail = path.match(/^\/parcels\/([^/]+)$/);
     if (method === 'GET' && detail) {
       return json(200, await getParcelDetail(db, decodeURIComponent(detail[1])));
@@ -94,7 +102,8 @@ export async function handler(
 async function getParcelDetail(db: Db, parcelId: string) {
   const [parcel] = await db.query(
     `SELECT id, loc_id, apn, resolution::text AS resolution, address, city, state, zip,
-            lot_acres, lot_sqft, zoning_code, zoning_source
+            lot_acres, lot_sqft, zoning_code, zoning_source,
+            ST_Y(geom) AS lat, ST_X(geom) AS lng, ST_AsGeoJSON(lot_geom) AS lot_geojson
      FROM parcels WHERE id = :id`,
     { id: parcelId },
   );
@@ -154,6 +163,35 @@ async function saveProForma(
     createdBy: sub || null,
   });
   return { scenario, proForma: pf };
+}
+
+let s3: S3Client | null = null;
+function s3Client(): S3Client {
+  if (!s3) s3 = new S3Client({ region: process.env.AWS_REGION });
+  return s3;
+}
+
+/** Generate the 2-page memo, store it in S3, and return a presigned download URL. */
+async function buildReport(db: Db, parcelId: string): Promise<{ url: string; key: string } | { error: string }> {
+  const detail = (await getParcelDetail(db, parcelId)) as ParcelDetail & { error?: string };
+  if (detail.error) return { error: 'not_found' };
+
+  const today = new Date().toISOString().slice(0, 10);
+  const bytes = await buildMemoPdf(detailToMemoData(detail, today));
+
+  const bucket = requireEnv('BUCKET');
+  const key = `reports/${parcelId}/${today}.pdf`;
+  await s3Client().send(
+    new PutObjectCommand({ Bucket: bucket, Key: key, Body: bytes, ContentType: 'application/pdf' }),
+  );
+  // Cast around the @smithy/types version-identity skew between client-s3 and
+  // s3-request-presigner (private `handlers` property) — runtime shape is correct.
+  const url = await getSignedUrl(
+    s3Client() as never,
+    new GetObjectCommand({ Bucket: bucket, Key: key }) as never,
+    { expiresIn: 3600 },
+  );
+  return { url, key };
 }
 
 function parseBody(event: APIGatewayProxyEventV2WithJWTAuthorizer): Record<string, unknown> {

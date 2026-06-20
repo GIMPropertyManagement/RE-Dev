@@ -60,7 +60,13 @@ export async function enrichParcel(
 
   await upsertProForma(db, c.parcel_id, {
     scenario: 'auto',
-    inputs: DEFAULT_PRO_FORMA_INPUTS,
+    // Persist the deal basis (recommended offer as land) + product so the detail
+    // page and PDF memo can show them without recomputing.
+    inputs: {
+      ...DEFAULT_PRO_FORMA_INPUTS,
+      land: feas.recommendedOffer,
+      recommended_product: feas.recommendedProduct,
+    },
     arvLow: feas.proForma.arv_low,
     arvHigh: feas.proForma.arv_high,
     allinLow: feas.proForma.allin_low,

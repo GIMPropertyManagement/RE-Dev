@@ -26,6 +26,7 @@ corrections to the original PRD, and the build plan.
   api          Cognito-authed app API Lambda
   research     per-parcel research engine (GIS kinds + zoning LLM) with TTL caching
   scoring      pro forma + 0-100 score + risk flags + recommended offer
+  pdf          2-page PDF investment memo builder (pdf-lib)
   infra        CDK app (Aurora Serverless v2, Lambdas, EventBridge, S3, secrets)
 ```
 
@@ -49,15 +50,18 @@ with `VITE_API_URL` (see `.env.example`).
 
 ## Current status
 
-**Phases 1–3 built** (34 tests green), building against Repliers **sandbox**
+**Phases 1–4 built** (36 tests green), building against Repliers **sandbox**
 data. Phase 1 = ingest + store + dashboard; Phase 2 = the per-parcel research
 engine (flood/wetlands/topo/ownership/CMA deterministic from government GIS +
 our own comps; zoning via Claude with web tools + source validation; TTL
 caching); Phase 3 = pro forma + 0–100 score + risk flags + recommended offer,
-the enrich step wired into the daily pipeline (research → feasibility → rank),
-and the watch/proforma/runs/digest API endpoints. Live MLS data is gated on the
+the enrich step wired into the daily pipeline, and the
+watch/proforma/runs/digest endpoints; Phase 4 = the property detail page (map,
+findings, CMA, live pro forma editor, sources) and the 2-page PDF investment
+memo (server-side → S3, or client-side in preview). Live MLS data is gated on the
 MLS PIN broker agreement — see Phase 0 in [ARCHITECTURE.md](ARCHITECTURE.md).
-Phases 4–5 (detail page + PDF memo export, polish) remain.
+Phase 5 (polish: budget alarms, MFA, provider-swap test, dedupe, notifications)
+remains.
 
 ## Provisioning (later)
 

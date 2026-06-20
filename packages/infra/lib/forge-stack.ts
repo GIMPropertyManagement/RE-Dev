@@ -153,12 +153,13 @@ export class ForgeStack extends Stack {
       handler: 'handler',
       runtime: lambda.Runtime.NODEJS_20_X,
       timeout: Duration.seconds(30),
-      memorySize: 512,
-      environment: dbEnv,
+      memorySize: 1024, // pdf-lib memo generation
+      environment: { ...dbEnv, BUCKET: bucket.bucketName },
       bundling,
     });
     cluster.grantDataApiAccess(apiFn);
     cluster.secret!.grantRead(apiFn);
+    bucket.grantReadWrite(apiFn);
 
     // HTTP API locked behind the Amplify Cognito user pool (JWT authorizer).
     const issuer = `https://cognito-idp.${this.region}.amazonaws.com/${props.userPoolId}`;
@@ -176,6 +177,7 @@ export class ForgeStack extends Stack {
     httpApi.addRoutes({ path: '/parcels/{id}/reresearch', methods: [apigw.HttpMethod.POST], integration });
     httpApi.addRoutes({ path: '/runs/{date}', methods: [apigw.HttpMethod.GET], integration });
     httpApi.addRoutes({ path: '/digest/today', methods: [apigw.HttpMethod.GET], integration });
+    httpApi.addRoutes({ path: '/parcels/{id}/report.pdf', methods: [apigw.HttpMethod.GET], integration });
 
     new CfnOutput(this, 'ApiUrl', { value: httpApi.apiEndpoint });
     new CfnOutput(this, 'ClusterArn', { value: cluster.clusterArn });
