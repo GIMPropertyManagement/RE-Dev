@@ -4,4 +4,6 @@ export { handler } from './handler.js';
 export { enrichParcel, runDailyEnrich } from './enrich.js';
 export type { DailyEnrichResult, EnrichDeps } from './enrich.js';
 export { enrichHandler } from './enrichHandler.js';
+export { sendDailyDigest, buildDigest } from './notify.js';
+export type { NotifyConfig } from './notify.js';
 export { getSecretString, getSecretJsonField } from './secrets.js';

@@ -17,11 +17,13 @@ into the daily pipeline (research → feasibility → persist → rank), and the
 watch/proforma/runs/digest API endpoints. Phase 4: the property detail page
 (map, research findings, CMA table, live pro forma editor, sources, watch/
 re-research) and the 2-page PDF investment memo (`@forge/pdf`) — generated
-server-side to S3 (presigned download) and client-side in preview. All
-typecheck/build/test green (36 tests). Nothing is deployed and no live MLS data
-flows yet — gated on the MLS PIN broker agreement (Phase 0, below). Phase 5
-(polish: budget alarms, MFA, provider-swap test, dedupe hardening, notifications)
-remains.
+server-side to S3 (presigned download) and client-side in preview. Phase 5
+(polish): a second provider (`SimplyRetsProvider`) proving the swap seam, the
+SES/Slack daily digest wired into the enrich run, AWS Budgets + CloudWatch error
+alarms, ingest in-run dedupe, and MFA-optional auth. **All five phases are built
+(v1 feature-complete); 41 tests green.** Nothing is deployed and no live MLS data
+flows yet — gated on the MLS PIN broker agreement (Phase 0) and the deploy-time
+wiring TODOs below.
 
 ## Component map
 
@@ -175,6 +177,21 @@ matters most (the source IS the government endpoint).
   generates it server-side → uploads to S3 → returns a **presigned** URL
   (`GET /parcels/:id/report.pdf`); the web builds it **client-side** in preview
   mode (no backend needed). `detailToMemoData` maps the API detail JSON for both.
+
+### 7c. Polish (Phase 5 — BUILT)
+- **Provider-swap proof:** `SimplyRetsProvider` (`@forge/providers`) is a second
+  full `MlsProvider` (Basic auth, RESO normalization). A test asserts both
+  providers satisfy the interface — swapping the launch feed is a one-file change.
+- **Notifications:** `@forge/pipeline` `sendDailyDigest` builds the day's top-N
+  ranked digest and sends it via SES + optional Slack webhook; wired (best-effort)
+  into the enrich Lambda.
+- **Cost guardrails:** an AWS Budgets monthly cost budget (alerts at 80%/100%) +
+  CloudWatch error alarms on all three Lambdas → SNS email. (Per-parcel Claude
+  spend is separately bounded by token caps + `ENRICH_LIMIT`.)
+- **Dedupe hardening:** ingest skips repeated `ListingKey`s within a run (the DB
+  upsert is already idempotent).
+- **MFA:** available (TOTP, OPTIONAL) at enrollment; flip `multifactor.mode` to
+  `'REQUIRED'` in `amplify/auth/resource.ts` to mandate it.
 
 ### 8. Step Functions deferred
 For 3 users and a once-daily bounded batch, a single scheduled ingest Lambda

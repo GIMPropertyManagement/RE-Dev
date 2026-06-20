@@ -39,8 +39,14 @@ export async function runIngest(
   let ingested = 0;
   let resolved = 0;
   let unresolved = 0;
+  // Dedupe within a run: a provider can emit the same ListingKey twice across
+  // pages; the DB upsert is idempotent anyway, but skipping avoids wasted
+  // parcel-resolution work and double counts.
+  const seen = new Set<string>();
 
   for await (const listing of provider.fetchChangedSince(since)) {
+    if (seen.has(listing.listingKey)) continue;
+    seen.add(listing.listingKey);
     try {
       let parcelId: string | null = null;
 

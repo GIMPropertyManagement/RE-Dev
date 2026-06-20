@@ -50,18 +50,19 @@ with `VITE_API_URL` (see `.env.example`).
 
 ## Current status
 
-**Phases 1–4 built** (36 tests green), building against Repliers **sandbox**
-data. Phase 1 = ingest + store + dashboard; Phase 2 = the per-parcel research
-engine (flood/wetlands/topo/ownership/CMA deterministic from government GIS +
-our own comps; zoning via Claude with web tools + source validation; TTL
-caching); Phase 3 = pro forma + 0–100 score + risk flags + recommended offer,
-the enrich step wired into the daily pipeline, and the
-watch/proforma/runs/digest endpoints; Phase 4 = the property detail page (map,
-findings, CMA, live pro forma editor, sources) and the 2-page PDF investment
-memo (server-side → S3, or client-side in preview). Live MLS data is gated on the
-MLS PIN broker agreement — see Phase 0 in [ARCHITECTURE.md](ARCHITECTURE.md).
-Phase 5 (polish: budget alarms, MFA, provider-swap test, dedupe, notifications)
-remains.
+**All five phases built — v1 feature-complete** (41 tests green), building
+against Repliers **sandbox** data. Phase 1 = ingest + store + dashboard;
+Phase 2 = the per-parcel research engine (flood/wetlands/topo/ownership/CMA
+deterministic from government GIS + our own comps; zoning via Claude with web
+tools + source validation; TTL caching); Phase 3 = pro forma + 0–100 score +
+risk flags + recommended offer, the enrich step wired into the daily pipeline,
+and the watch/proforma/runs/digest endpoints; Phase 4 = the property detail page
+(map, findings, CMA, live pro forma editor, sources) and the 2-page PDF
+investment memo; Phase 5 = a second provider (SimplyRETS) proving the swap seam,
+SES/Slack daily digest, AWS Budgets + CloudWatch alarms, ingest dedupe, MFA.
+
+Live MLS data and deployment are gated on the MLS PIN broker agreement (Phase 0)
+and the deploy-time wiring TODOs in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Provisioning (later)
 

@@ -2,6 +2,7 @@ import { Db } from '@forge/db';
 import { RepliersProvider } from '@forge/providers';
 import { ResearchLlm } from '@forge/research';
 import { runDailyEnrich, type DailyEnrichResult } from './enrich.js';
+import { sendDailyDigest } from './notify.js';
 import { getSecretJsonField } from './secrets.js';
 
 /**
@@ -40,6 +41,20 @@ export async function enrichHandler(): Promise<DailyEnrichResult> {
     log: (msg, extra) => console.log(JSON.stringify({ msg, ...extra })),
   });
   console.log(JSON.stringify({ msg: 'enrich_complete', ...result }));
+
+  // Best-effort daily digest (SES + optional Slack). Never fails the run.
+  try {
+    const digest = await sendDailyDigest(db, runDate, {
+      region,
+      from: process.env.SES_FROM,
+      to: process.env.SES_TO?.split(',').map((s) => s.trim()).filter(Boolean),
+      slackWebhook: process.env.SLACK_WEBHOOK,
+    });
+    console.log(JSON.stringify({ msg: 'digest', ...digest }));
+  } catch (err) {
+    console.log(JSON.stringify({ msg: 'digest_failed', error: String(err) }));
+  }
+
   return result;
 }
 

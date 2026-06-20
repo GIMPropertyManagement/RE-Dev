@@ -16,6 +16,12 @@ import {
   aws_apigatewayv2 as apigw,
   aws_apigatewayv2_authorizers as apigwAuth,
   aws_apigatewayv2_integrations as apigwInt,
+  aws_iam as iam,
+  aws_cloudwatch as cw,
+  aws_cloudwatch_actions as cwActions,
+  aws_sns as sns,
+  aws_sns_subscriptions as snsSubs,
+  aws_budgets as budgets,
 } from 'aws-cdk-lib';
 import type { Construct } from 'constructs';
 
@@ -23,6 +29,14 @@ export interface ForgeStackProps extends StackProps {
   /** Cognito user pool created by Amplify (the auth seam). */
   userPoolId: string;
   userPoolClientId: string;
+  /** Ops email for cost/error alarms (SNS + AWS Budgets). */
+  alarmEmail?: string;
+  /** Monthly cost budget in USD; emits an alarm at 80% / 100% actual spend. */
+  monthlyBudgetUsd?: number;
+  /** Daily digest delivery (notify step). */
+  sesFrom?: string;
+  sesTo?: string; // comma-separated
+  slackWebhook?: string;
 }
 
 /**
@@ -132,6 +146,9 @@ export class ForgeStack extends Stack {
         ...dbEnv,
         REPLIERS_SECRET_ARN: repliersSecret.secretArn,
         CLAUDE_SECRET_ARN: claudeSecret.secretArn,
+        SES_FROM: props.sesFrom ?? '',
+        SES_TO: props.sesTo ?? '',
+        SLACK_WEBHOOK: props.slackWebhook ?? '',
       },
       bundling,
     });
@@ -140,6 +157,10 @@ export class ForgeStack extends Stack {
     repliersSecret.grantRead(enrichFn);
     claudeSecret.grantRead(enrichFn);
     bucket.grantReadWrite(enrichFn);
+    // SES send for the daily digest.
+    enrichFn.addToRolePolicy(
+      new iam.PolicyStatement({ actions: ['ses:SendEmail'], resources: ['*'] }),
+    );
 
     // Enrich runs 30 min after ingest.
     new events.Rule(this, 'DailyEnrich', {
@@ -178,6 +199,47 @@ export class ForgeStack extends Stack {
     httpApi.addRoutes({ path: '/runs/{date}', methods: [apigw.HttpMethod.GET], integration });
     httpApi.addRoutes({ path: '/digest/today', methods: [apigw.HttpMethod.GET], integration });
     httpApi.addRoutes({ path: '/parcels/{id}/report.pdf', methods: [apigw.HttpMethod.GET], integration });
+
+    // --- Ops: alarms + monthly cost budget ----------------------------------
+    const alarmTopic = new sns.Topic(this, 'AlarmTopic', { displayName: 'Forge Hill alarms' });
+    if (props.alarmEmail) {
+      alarmTopic.addSubscription(new snsSubs.EmailSubscription(props.alarmEmail));
+    }
+    // Error alarm on each Lambda — any error in a 15-min window pages ops.
+    for (const [name, fn] of [
+      ['Ingest', ingestFn],
+      ['Enrich', enrichFn],
+      ['Api', apiFn],
+    ] as const) {
+      fn.metricErrors({ period: Duration.minutes(15) })
+        .createAlarm(this, `${name}ErrorsAlarm`, {
+          threshold: 1,
+          evaluationPeriods: 1,
+          comparisonOperator: cw.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+          treatMissingData: cw.TreatMissingData.NOT_BREACHING,
+        })
+        .addAlarmAction(new cwActions.SnsAction(alarmTopic));
+    }
+    // Monthly cost budget (covers AWS + the per-run Claude/Repliers spend shows
+    // up via usage; this is the AWS-side guardrail). Alerts at 80% and 100%.
+    if (props.monthlyBudgetUsd && props.alarmEmail) {
+      new budgets.CfnBudget(this, 'MonthlyBudget', {
+        budget: {
+          budgetType: 'COST',
+          timeUnit: 'MONTHLY',
+          budgetLimit: { amount: props.monthlyBudgetUsd, unit: 'USD' },
+        },
+        notificationsWithSubscribers: [80, 100].map((threshold) => ({
+          notification: {
+            notificationType: 'ACTUAL',
+            comparisonOperator: 'GREATER_THAN',
+            threshold,
+            thresholdType: 'PERCENTAGE',
+          },
+          subscribers: [{ subscriptionType: 'EMAIL', address: props.alarmEmail! }],
+        })),
+      });
+    }
 
     new CfnOutput(this, 'ApiUrl', { value: httpApi.apiEndpoint });
     new CfnOutput(this, 'ClusterArn', { value: cluster.clusterArn });

@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Daily pipeline: incremental ingest + research/feasibility enrichment + ranking.",
+  "description": "Daily pipeline: incremental ingest + research/feasibility enrichment + ranking + digest.",
   "exports": { ".": "./src/index.ts" },
-  "scripts": { "typecheck": "tsc --noEmit" },
+  "scripts": { "test": "vitest run", "typecheck": "tsc --noEmit" },
   "dependencies": {
     "@forge/shared": "*",
     "@forge/providers": "*",
@@ -13,7 +13,8 @@
     "@forge/db": "*",
     "@forge/research": "*",
     "@forge/scoring": "*",
-    "@aws-sdk/client-secrets-manager": "^3.700.0"
+    "@aws-sdk/client-secrets-manager": "^3.700.0",
+    "@aws-sdk/client-sesv2": "^3.700.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.145"

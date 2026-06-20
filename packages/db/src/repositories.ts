@@ -29,7 +29,7 @@ export interface ParcelRow {
   score: number | null;
   rank: number | null;
   profit_mid: number | null;
-  flags: unknown;
+  flags: { code: string; detail?: string }[];
   summary: string | null;
 }
 
