@@ -58,18 +58,25 @@ export const cmaKind: ResearchProducer<CmaPayload> = async (input, deps) => {
   const arvLow = ppsfLow != null ? Math.round(ppsfLow * TARGET_SQFT) : null;
   const arvHigh = ppsfHigh != null ? Math.round(ppsfHigh * TARGET_SQFT) : null;
 
-  // AVM cross-check (does not override comp-derived ARV; flags divergence).
+  // AVM cross-check of the PLANNED build's ARV (does not override comp-derived
+  // ARV; flags divergence). /estimates values a built home, so we pass the
+  // planned product's specs. Best-effort: a failed estimate must never sink the
+  // CMA, so it's wrapped and skipped on error.
   let avm: CmaPayload['avm_cross_check'] = null;
   if (deps.comps.fetchEstimate) {
-    const est = await deps.comps.fetchEstimate({
-      address: input.address ?? undefined,
-      lat: input.lat ?? undefined,
-      lng: input.lng ?? undefined,
-    });
-    if (est) {
-      const divergence =
-        arv != null && arv > 0 ? round(((est.value - arv) / arv) * 100, 1) : null;
-      avm = { value: est.value, divergence_pct: divergence };
+    try {
+      const est = await deps.comps.fetchEstimate({
+        address: { city: input.town ?? undefined },
+        details: { numBedrooms: 4, numBathrooms: 3, propertyType: 'Detached', sqft: TARGET_SQFT, style: 'Detached' },
+        overallQuality: 'above average',
+      });
+      if (est) {
+        const divergence =
+          arv != null && arv > 0 ? round(((est.value - arv) / arv) * 100, 1) : null;
+        avm = { value: est.value, divergence_pct: divergence };
+      }
+    } catch {
+      // AVM is a non-essential cross-check; ignore failures.
     }
   }
 

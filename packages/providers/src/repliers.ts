@@ -76,8 +76,11 @@ export class RepliersProvider implements MlsProvider {
       params.set('status', 'U');
       params.append('status', 'A');
       if (since) {
-        // CONFIRM(sandbox): exact "updated since" param name. `minUpdatedOn` is
-        // the expected name; we also client-side filter below as a safety net.
+        // Confirmed param: `minUpdatedOn` (with sortBy `updatedOnAsc`) — both are
+        // valid per the listings reference. (`minRepliersUpdatedOn` +
+        // `repliersUpdatedOnAsc` track Repliers' own ingest time and are a more
+        // robust watermark if MLS updatedOn ever arrives out of order.) We also
+        // client-side filter below as a safety net.
         params.set('minUpdatedOn', since);
       }
       for (const t of opts.propertyTypes ?? []) params.append('propertyType', t);
@@ -121,8 +124,7 @@ export class RepliersProvider implements MlsProvider {
     q.set('lastStatus', 'Sld');
     q.set('lat', String(params.lat));
     q.set('long', String(params.lng));
-    // CONFIRM(sandbox): radius unit. Repliers `radius` is documented in km;
-    // convert miles -> km here and verify once live.
+    // Confirmed: Repliers `radius` is in KILOMETERS — convert from miles.
     q.set('radius', String(round2(params.radiusMi * 1.60934)));
     q.set('minSoldDate', minSoldDate);
     q.set('resultsPerPage', '100');
@@ -136,17 +138,19 @@ export class RepliersProvider implements MlsProvider {
   }
 
   async fetchEstimate(params: EstimateParams): Promise<AvmEstimate | null> {
-    // CONFIRM(sandbox): exact /estimates request body. Repliers values an
-    // off-market property from supplied attributes (address, lot, taxes,
-    // details, overallQuality). We pass through `attributes` plus address/geo.
-    const payload: Record<string, unknown> = {
-      ...(params.attributes ?? {}),
-      ...(params.address ? { address: params.address } : {}),
-      ...(params.lat != null && params.lng != null
-        ? { map: { latitude: params.lat, longitude: params.lng } }
-        : {}),
-      ...(this.cfg.boardId != null ? { boardId: this.cfg.boardId } : {}),
-    };
+    // Confirmed (docs.repliers.io/reference/create-an-estimate): POST /estimates
+    // values a BUILT home. Required: address{streetNumber,streetName,city,zip}
+    // and details{numBedrooms,numBathrooms,propertyType,sqft,style}. It does NOT
+    // take lat/long. We send the structured shape; boardId is required on
+    // multi-board keys.
+    const payload: Record<string, unknown> = {};
+    if (params.address) payload.address = params.address;
+    if (params.details) payload.details = params.details;
+    if (params.overallQuality != null) payload.overallQuality = params.overallQuality;
+    if (params.lotAcres != null) payload.lot = { acres: String(params.lotAcres) };
+    const boardId = params.boardId ?? this.cfg.boardId;
+    if (boardId != null) payload.boardId = boardId;
+
     const raw = await this.post<Record<string, unknown>>('/estimates', payload);
     const value = numOf(raw['estimate']) ?? numOf(raw['value']);
     if (value == null) return null;

@@ -53,12 +53,33 @@ export interface SoldCompsParams {
   propertyTypes?: PropertyType[];
 }
 
+/**
+ * AVM estimate inputs. The Repliers /estimates endpoint values a *built* home
+ * from its attributes (not a raw-land lookup), so the address is structured and
+ * `details` describes the dwelling. For our land-build use we pass the PLANNED
+ * product's specs to cross-check the comp-derived ARV.
+ */
+export interface EstimateAddress {
+  streetNumber?: string;
+  streetName?: string;
+  city?: string;
+  zip?: string;
+  unitNumber?: string;
+}
+export interface EstimateDetails {
+  numBedrooms?: number;
+  numBathrooms?: number;
+  propertyType?: string;
+  sqft?: number;
+  style?: string;
+}
 export interface EstimateParams {
-  address?: string;
-  lat?: number;
-  lng?: number;
-  /** Free-form attributes a provider may use to value an off-market parcel. */
-  attributes?: Record<string, unknown>;
+  address?: EstimateAddress;
+  details?: EstimateDetails;
+  /** 1.0–6.0 or "poor".."excellent" (defaults to "average"). */
+  overallQuality?: number | string;
+  lotAcres?: number;
+  boardId?: number;
 }
 
 export interface AvmEstimate {

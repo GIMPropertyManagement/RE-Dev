@@ -78,17 +78,17 @@ const LAST_STATUS_MAP: Record<string, StandardStatus> = {
   New: 'Active',
   Pc: 'Active', // price change, still active
   Ext: 'Active', // extended
+  Dft: 'Active', // deal fell through -> back active
   Sc: 'ActiveUnderContract', // sold conditional
-  Sce: 'ActiveUnderContract',
-  Pcs: 'Pending', // pending continue to show
-  Sld: 'Closed',
+  Sce: 'ActiveUnderContract', // sold conditional w/ escape
+  Lc: 'ActiveUnderContract', // leased conditional
+  Sld: 'Closed', // sold
   Lsd: 'Closed', // leased
   Exp: 'Expired',
   Ter: 'Canceled', // terminated
   Sus: 'Hold', // suspended
-  Dft: 'Active', // deal fell through -> back active
-  Cs: 'ComingSoon',
 };
+// (Confirmed lastStatus set: New, Pc, Ext, Dft, Sc, Sce, Lc, Sld, Lsd, Exp, Ter, Sus.)
 
 function statusOf(r: RepliersRawListing): StandardStatus {
   if (r.lastStatus && LAST_STATUS_MAP[r.lastStatus]) {
